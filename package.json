@@ -4,12 +4,27 @@
   "description": "Small application to create surveys",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.16.4"
+    "bcrypt": "^3.0.2",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mysql": "^2.16.0",
+    "mysql2": "^1.6.1",
+    "sequelize": "^4.41.0",
+    "sequelize-cli": "^5.2.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "dhiraj",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhirajshrotri/survey_app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dhirajshrotri/survey_app/issues"
+  },
+  "homepage": "https://github.com/dhirajshrotri/survey_app#readme"
 }
