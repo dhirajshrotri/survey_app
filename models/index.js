@@ -42,23 +42,19 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-// db.customers = require('../model/customer.model.js')(sequelize, Sequelize);
-// db.customers = require('../model/customer.model.js')(sequelize, Sequelize);
-// db.customers = require('../model/customer.model.js')(sequelize, Sequelize);
-//table associations....
-/*db.questionId.hasOne(db.questionText);
-db.questionId.belongsTo(db.survey);
-db.admins.hasMany(db.survey);
-db.survey.belongsTo(db.admins);
-db.survey.hasMany(db.questionId);
-db.questionText.belongsTo(db.questionId);
-*/
-// db.survey.belongsTo(db.admins, {foreignkey: 'adminId'});
-// db.questionId.belongsTo(db.survey, {foreignkey: 'surveyId'});
-// db.questionText.belongsTo(db.questionId, {foreignkey: 'questionId'});
-// db.admin.belongsTo(db.survey, {foreignKey: 'adminId'});
-// db.survey.belongsTo(db.questionId, {foreignKey: 'surveyId'});
-// db.questionText.hasOne(db.questionId, {foreignKey: 'questionId'});
+// db.questionId.belongsToMany(db.answerId, 
+//   {
+//     through: 'questionAnswers'
+//   },
+//   {
+//     foreignKey: 'questionId'
+//   });
+// db.answerId.belongsTo(db.questionId);
+// db.answerId.hasMany(db.questionId,  {
+//   through: 'db.questionAnswers'
+// },{
+//   foreignKey: 'questionId'
+// });
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

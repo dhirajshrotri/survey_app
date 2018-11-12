@@ -7,18 +7,19 @@ module.exports = function(Sequelize, DataTypes) {
 			unique: true,
 			primaryKey: true
 		},
-		surveyName: DataTypes.STRING
+		surveyName: DataTypes.STRING, 
+		adminId: DataTypes.UUID
 	},
 	 {
-		classMethods: {
-			associate: function(models) {
-				survey.belongsToMany(models.questionText, {
-					through: models.questionId
-				},{
-						foreignKey: 'surveyId'
-					});
-			}
-		},
+		// classMethods: {
+		// 	associate: function(models) {
+		// 		survey.belongsToMany(models.questionText, {
+		// 			through: models.questionId
+		// 		},{
+		// 				foreignKey: 'surveyId'
+		// 			});
+		// 	}
+		// },
 		timestamps: false,
 		freezeTableName : true
 	});

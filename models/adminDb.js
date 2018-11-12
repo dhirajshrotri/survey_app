@@ -15,19 +15,19 @@ module.exports = function(Sequelize, DataTypes) {
 		},
 		adminPass: DataTypes.STRING
 	},{
-		classMethods: {
-			associate: function(models){
+		//classMethods: {
+		//	associate: function(models){
 				// admin.belongsTo(models.survey, {
 				// 	through: {
 				// 		foreignKey: 'adminId'
 				// 	}
 
 				//})
-				admin.belongsToMany(models.survey, {
-					through: models.adminSurvey
-				})
-			}
-		},
+				// admin.belongsToMany(models.survey, {
+				// 	through: models.adminSurvey
+				// })
+		//	}
+	//	},
 		timestamps: false,
 		freezeTableName : true
 	});

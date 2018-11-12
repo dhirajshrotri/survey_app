@@ -5,6 +5,10 @@ module.exports = function(Sequelize, DataTypes){
 		questionId: {
 			type: DataTypes.INTEGER,
 			primaryKey: true
+		}, 
+		surveyId: {
+			type: DataTypes.UUID,
+			unique: true 
 		}
 	 },{
 	 	timestamps: false,

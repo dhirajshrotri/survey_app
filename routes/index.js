@@ -68,7 +68,7 @@ router
 		console.log(req.body.questionText);
 		console.log("Welcome to the route to create new questions!")
 	})
-	.get('/:adminId/Surveys/:surveyId/:questionId', function(req, res){
+	.get('/admin/:adminId/Surveys/:surveyId/:questionId', function(req, res){
 		models.sequelize.query('select questionText from questionText where questionId = ? ', {replacements: [req.params.questionId]})
 		.spread((results, metadata)=>{
 			console.log(results);
@@ -87,8 +87,10 @@ router
 	})
 	.delete('/:adminId/Surveys/:surveyId', function(req, res){
 		console.log('delete route hit..')
-		// models.sequelize.query('delete * from surveys full join questionIds on surveys.surveyId = questionIds.surveyId where survey.surveyId = ?', {replacements: [req.params.surveyId]})
-	})
+		models.sequelize.query('delete a.*, b.* from survey a inner join questionId b on a.surveyId = b.surveyId where a.surveyId = ?', {
+			replacements : [req.params.questionId] 
+		})
+	})	
 	.post('/admin/register', function(req, res){
 				
 		hash = bcrypt.hashSync(req.body.pass, salt);
@@ -103,8 +105,9 @@ router
 
 	})
 	.post('/admin/login', function(req, res){
-		models.sequelize.query('select adminPass, adminId from admins where adminEmail = ?', {replacements: [req.body.adminEmail]
-		,  type: models.sequelize.QueryTypes.SELECT})
+		models.sequelize.query('select adminPass, adminId from admins where adminEmail = ?', {
+			replacements: [req.body.adminEmail],  
+			type: models.sequelize.QueryTypes.SELECT})
   			.then(results => {
     			console.log(results[0].adminPass);
     			bcrypt.compare(req.body.adminPass, results[0].adminPass).then(function(result) {
@@ -143,8 +146,41 @@ router
 		res.send('Welcome to admin dashboard page....!');
 	});
 	router.put('/user?=admin/:adminId', function(req, res){
-		models.sequelize.query('update ')
+		models.admin.update(
+		{	firstName: req.body.firstName, 
+			lastName: req.body.lastName, 
+			adminEmail: req.body.adminEmail, 
+				},
+		{	where: { adminId : req.params.adminId } }
+	).then(function(result){
+				res.send(result);
+			})
+		res.redirect('/user?=admin/'+req.params.adminId);
 	})
-
+	router.post('/user/Surveys/:surveyId/question/:questionId/answer?', function(req, res){
+		
+		//models.sequelize.query('insert into answerIds (answerId, answerText) values (?, ?)', {replacements: [req.params.questionId, req.body.answerText]})
+		
+		var path = '/user/Surveys/'+req.params.surveyId+'/question/'+req.params.questionId+'/answer?';
+		console.log(path)
+		res.redirect(200, path)
+		console.log('redirecting')
+		// models.questionId.addAnswerId(models.answerId);
+		//console.log("Answer route");
+	})
+	router.get('/user/Surveys/:surveyId/question/:questionId/answer?', function(req, res){
+		// models.sequelize.query('select a.answerId, b.questionText, a.answerText from answerIds a, questionText b where a.answerId = b.questionId and a.answerId = ?', {
+		// 	replacements: [req.params.questionId], 
+		// 	type: models.sequelize.QueryTypes.select})
+		// 	.then(results => {
+		// 		console.log(results);
+		// 	})
+		console.log('redirected to question preview');
+	});
+	router.delete('/user/Surveys/:surveyId/question/:questionId/answer?', function(req, res){
+		models.sequelize.query('delete from answerIds where answerId = ?', { replacements: [req.params.questionId]});
+		console.log('deleting record ' + req.params.questionId);
+	});
+	
 //router.get()
 module.exports = router;
