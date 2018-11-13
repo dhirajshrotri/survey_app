@@ -30,10 +30,10 @@ fs
     return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
   })
   .forEach(file => {
-    console.log("\n\n gjhsajgjsda------", path.join(__dirname, file), __dirname, file )
+    //console.log("\n\n gjhsajgjsda------", path.join(__dirname, file), __dirname, file )
     var model = sequelize['import'](path.join(__dirname, file));
     db[model.name] = model;
-    console.log("\nn---------", model.name)
+    //console.log("\nn---------", model.name)
   });
 
 Object.keys(db).forEach(modelName => {
