@@ -1,0 +1,14 @@
+insert into answerIds (answerText, answerId) select ('bdfagjb asfgdhgsd sfbdgabg', a.questionId)
+from questionId a where a.questionId is not NULL and answerId = a.questionId and answerId = '53';
+
+insert into answerIds (answerText, answerId) values ('bdfagjb asfgdhgsd sfbdgabg', 53)
+where answerId in (select questionId from questionId);
+
+insert into answerIds (answerText, answerId) select ('bdfagjb asfgdhgsd sfbdgabg', questionId)
+from questionId where questionId = 53
+
+delete survey, questionId, questionText from survey inner join questionText inner join questionId 
+where survey.surveyId = questionId.surveyId and questionId.questionId = questionText.questionId and surveyId = '75c030a0-e736-11e8-8b91-fdcf54e6fc1e'
+
+delete admin, survey, questionId, questionText from admin inner join survey inner join questionId inner join questionText where admin.adminId = survey.adminId and survey.surveyId = questionId.surveyId and questionId.questionId
+ = questionText.questionId and admin.adminId = 'dee33ef0-e71e-11e8-8d23-43dafced48f7';

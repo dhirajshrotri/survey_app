@@ -8,7 +8,7 @@ module.exports = function(Sequelize, DataTypes){
 		}, 
 		surveyId: {
 			type: DataTypes.UUID,
-			unique: true 
+			//unique: true 
 		}
 	 },{
 	 	timestamps: false,
