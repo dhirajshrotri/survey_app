@@ -25,6 +25,8 @@ const transporter = nodemailer.createTransport({
 				adminId : req.params.adminId, 
 				surveyName: req.body.surveyName,
 				surveyId: surveyId 	
+	 		}).then((results)=>{
+	 			res.send("Survey Created Successfully!")
 	 		});
 		if(req.body.isPrivate){
 			var token = crypto.randomBytes(20).toString('hex');
@@ -36,7 +38,8 @@ const transporter = nodemailer.createTransport({
 			});
 			console.log(token);
 		}
-		var path = '/admin/'+adminId+'/Surveys/'+surveyId;
+
+		//var path = '/admin/'+adminId+'/Surveys/'+surveyId;
 		//res.redirect(path); 
 	})
 
@@ -98,6 +101,35 @@ const transporter = nodemailer.createTransport({
 		//TODO: preview the questions with questionText here...!
 		//models.sequelize.query('select * from questionText where ')
 		//res.send('question no 1 path reached');
+		models.sequelize.query('select surveyId from isPrivate where token = ?', {
+			replacements : [req.params.token]
+		}).spread((results, metadata) => {
+			var surveyId = results[0].surveyId;
+			models.sequelize.query('select * from questionText as T1 join questionId as T2 on T2.questionId = T1.questionId where T2.surveyId = ?',
+			{
+				replacements : [surveyId]
+			})
+		})
+	})
+
+	.post('/user/privateSurvey/:token/questions/:questionId', function(req, res){
+		models.answerText.create({
+			answerText: req.body.answerText,
+			answerId: req.body.questionId
+		});
+		models.sequelize.query('select id, questionId from questionText where questionId = ?',{
+			replacements: [req.body.questionId]
+		}).spread((results, metadata) => {
+			var id = results[0].id;
+			var nextId = id + 1;
+			models.sequelize.query('select questionId from questionText where questionId = ?',{
+				replacements: [nextId]
+			}).spread((nexRes, meta)=>{
+				var nexQuestion = nexRes[0].questionId;
+				var path = '/user/privateSurvey/'+req.params.token+'/questions/'+nexQuestion;
+				res.redirect(path);
+			})
+		})
 	})
 	
 	router.get('/admin/:adminId', function(req, res){
@@ -144,15 +176,21 @@ const transporter = nodemailer.createTransport({
 
 	
 	router.post('/admin/:adminId/Surveys/:surveyId/questions/:questionId', function(req, res){
+			var questionText = req.body.questionText;
+			var questionId = req.body.questionId;
 			models.questionText.create({
-				questionText: req.body.questionText,
-				questionId : req.params.questionId,
+				questionText: questionText,
+				questionId: questionId
 			})
-			var path = '/admin/'+req.params.adminId+'/Surveys/'+req.params.surveyId+'/'+req.params.questionId;
+			models.questionId.create({
+				surveyId: req.params.surveyId,
+				questionId: questionId
+			})
+			var path = '/admin/'+req.params.adminId+'/Surveys/'+req.params.surveyId;
 			res.redirect(path);
 		})
 
-	router.get('/admin/:adminId/Surveys/:surveyId/questions/:questionId', function(req, res){
+	router.get('/admin/:adminId/Surveys/:surveyId/questions/', function(req, res){
 			models.sequelize.query('select questionText from questionText where questionId = ? ', 
 				{
 					replacements: [req.params.questionId]
@@ -169,14 +207,14 @@ const transporter = nodemailer.createTransport({
 				});
 		})
 		
-	router.delete('/user=?admin/:adminId/Surveys/:surveyId/:questionId', function(req, res){
+	router.delete('/admin/:adminId/Surveys/:surveyId/:questionId', function(req, res){
 			models.sequelize.query('delete from questionText where questionId = ?', 
 				{
 					replacements: [req.params.questionId]
 				});
 		})
 		
-	router.delete('/user=?admin/:adminId/Surveys/:surveyId', function(req, res){
+	router.delete('/admin/:adminId/Surveys/:surveyId', function(req, res){
 			console.log('delete route hit..')
 			models.sequelize.query('delete a.*, b.* from survey a inner join questionId b on a.surveyId = b.surveyId where a.surveyId = ?', 
 			{
@@ -203,7 +241,7 @@ const transporter = nodemailer.createTransport({
 				});
 			}
 			else{
-				console.log('Password is invalid!');
+				res.send('Password is invalid!');
 			}
 		})
 		
@@ -354,7 +392,7 @@ const transporter = nodemailer.createTransport({
 		
 	});
 
-	router.put('/=admin/:adminId', function(req, res){
+	router.put('/admin/:adminId', function(req, res){
 		models.admin.update({	
 				firstName: req.body.firstName, 
 				lastName: req.body.lastName, 
@@ -367,30 +405,44 @@ const transporter = nodemailer.createTransport({
 		}).then(function(result){
 					res.send(result);
 				})
-			res.redirect('/user?=admin/'+req.params.adminId);
+			res.redirect('/admin/'+req.params.adminId);
 		})
 	
 	router
 		//user side route to post answers	
-		.post('/user/Surveys/:surveyId/question/:questionId/answer?', function(req, res){
+		.post('/user/Surveys/:surveyId/questions/:questionId', function(req, res){
 		
 			models.sequelize.query('insert into answerIds (answerText, answerId) select ?, questionId from questionId where questionId = ?', 
 				{
 					replacements: [req.body.answerText, req.params.questionId]
 				}).spread((results, metadata)=>{
-					if(results === 0){
-						console.log('Insert failed. No such question exists!!');
-					}
-					else{
-						var path = '/user/Surveys/'+req.params.surveyId+'/question/'+req.params.questionId+'/answer?';
-						console.log(path)
-						res.redirect(path)
-						console.log('redirecting')
-					}
+					//console.log(results);
+					//if(results === 0){
+						//console.log('Insert failed. No such question exists!!');
+					//}
+					//else{
+						models.sequelize.query('select id from questionText where questionId = ?',{
+							replacements: [req.params.questionId]
+							}).spread((res1, meta) => {
+								var id = res1[0].id;
+								var nextId = id + 1;
+								models.sequelize.query('select questionId from questionText where questionId = ?',{
+									replacements: [nextId]
+								}).spread((nexRes, meta)=>{
+								var nexQuestion = nexRes[0].questionId;
+								var path = '/user/Surveys/'+req.params.surveyId+'/questions/'+nexQuestion;
+								res.redirect(path);
+								})
+							})
+						//var path = '/user/Surveys/'+req.params.surveyId+'/question/'+req.params.questionId+'/answer?';
+						//console.log(path)
+						//res.redirect(path)
+						//console.log('redirecting')
+					//}
 				})
 		})
 		//display answers to the selected questions
-	router.get('/user/Surveys/:surveyId/question/:questionId/answer?', function(req, res){
+	router.get('/user/Surveys/:surveyId/questions/:questionId', function(req, res){
 			models.sequelize.query('select a.answerId, b.questionText, a.answerText from answerIds a, questionText b where a.answerId = b.questionId and a.answerId = ?', {
 				replacements: [req.params.questionId], 
 				type: models.sequelize.QueryTypes.select})
