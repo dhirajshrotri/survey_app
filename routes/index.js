@@ -8,7 +8,10 @@ const url = require('url');
 var salt = bcrypt.genSaltSync(10);
 var crypto = require('crypto');
 const nodemailer = require('nodemailer');
+var cookieSession = require('cookie-session');
 let hashPass;
+
+//transporter object for nodemailer email service
 const transporter = nodemailer.createTransport({
 		   	host: 'smtp.ethereal.email',
 		    port: 587,
@@ -46,7 +49,7 @@ const transporter = nodemailer.createTransport({
 	router.post('/admin/:adminId/Surveys/:surveyId/sendMail', function(req, res){
 		var adminId = req.params.adminId;
 		var surveyId = req.params.surveyId;
-		var email = req.body.email;
+		var email = req.body.adminEmail;
 		var senderEmail = 'vofytp65as3sp4dd@ethereal.email';
 		
 		models.sequelize.query('select * from isPrivate where surveyId = ?', {
@@ -186,16 +189,16 @@ const transporter = nodemailer.createTransport({
 				surveyId: req.params.surveyId,
 				questionId: questionId
 			})
-			var path = '/admin/'+req.params.adminId+'/Surveys/'+req.params.surveyId;
+			var path = '/admin/'+req.params.adminId+'/Surveys/'+req.params.surveyId+'questions/'+questionId;
 			res.redirect(path);
 		})
 
-	router.get('/admin/:adminId/Surveys/:surveyId/questions/', function(req, res){
+	router.get('/admin/:adminId/Surveys/:surveyId/questions/:questionId', function(req, res){
 			models.sequelize.query('select questionText from questionText where questionId = ? ', 
 				{
 					replacements: [req.params.questionId]
 				}).spread((results, metadata) => {
-				console.log(results[0].questionText);
+				res.send(results[0].questionText);
 			})
 			
 		})
@@ -231,7 +234,7 @@ const transporter = nodemailer.createTransport({
 				models.admin.create({
 					firstName: req.body.firstName,
 					lastName: req.body.lastName,
-					adminEmail: req.body.email,
+					adminEmail: req.body.adminEmail,
 					adminId: adminId,
 					adminPass: hash
 				}).then(function(){
@@ -275,7 +278,7 @@ const transporter = nodemailer.createTransport({
 			res.send('this is the logout route!!');
 		})
 	router.post('/admin/forgot', function(req, res, next){
-			var email = req.body.email;
+			var email = req.body.adminEmail;
 			var token = crypto.randomBytes(20).toString('hex');
 			var tokenExpires = Date.now()+360000;//set the token to expire 1 hr after email sent
 			models.sequelize.query('select adminId from admin where adminEmail = ?', {
@@ -354,11 +357,11 @@ const transporter = nodemailer.createTransport({
 
 	router.get('/user/Survey/:surveyId', function(req, res){
 		models.sequelize.query('select * from isPrivate where surveyId = ?', {
-			replacements: [surveyId]
+			replacements: [req.params.surveyId]
 		}).spread((results, metadata) => {
 			//console.log(metadata[0]);
 			if(metadata[0]){
-				models.sequelize.query('select * from (select * from survey as T1 join questionId as T2 on T1.surveyId = T2.surveyId where surveyId = ?) as T12 join  questionText as T3 on T12.questionId = T3.questionId', 
+				models.sequelize.query('select * from (select * from survey as T1 join questionId as T2 on T1.surveyId = T2.surveyId where T1.surveyId = ?) as T12 join  questionText as T3 on T12.questionId = T3.questionId', 
 					{
 						replacements: [req.params.surveyId], 
 						type: models.sequelize.QueryTypes.select
@@ -416,11 +419,11 @@ const transporter = nodemailer.createTransport({
 				{
 					replacements: [req.body.answerText, req.params.questionId]
 				}).spread((results, metadata)=>{
-					//console.log(results);
-					//if(results === 0){
-						//console.log('Insert failed. No such question exists!!');
-					//}
-					//else{
+					console.log(results);
+					if(results === 0){
+						console.log('Insert failed. No such question exists!!');
+					}
+					else{
 						models.sequelize.query('select id from questionText where questionId = ?',{
 							replacements: [req.params.questionId]
 							}).spread((res1, meta) => {
@@ -434,11 +437,11 @@ const transporter = nodemailer.createTransport({
 								res.redirect(path);
 								})
 							})
-						//var path = '/user/Surveys/'+req.params.surveyId+'/question/'+req.params.questionId+'/answer?';
-						//console.log(path)
-						//res.redirect(path)
-						//console.log('redirecting')
-					//}
+						var path = '/user/Surveys/'+req.params.surveyId+'/question/'+req.params.questionId+'/answer?';
+						console.log(path)
+						res.redirect(path)
+						console.log('redirecting')
+					}
 				})
 		})
 		//display answers to the selected questions
@@ -452,11 +455,29 @@ const transporter = nodemailer.createTransport({
 			//console.log('redirected to question preview');
 		})
 
-	router.delete('/user/Surveys/:surveyId/question/:questionId/answer?', function(req, res){
+	router.delete('/user/Surveys/:surveyId/questions/:questionId/', function(req, res){
 			models.sequelize.query('delete from answerIds where answerId = ?', { 
 				replacements: [req.params.questionId]
 			});
-			console.log('deleting record ' + req.params.questionId);
+			res.send('deleting record ' + req.params.questionId);
 		})
+
+	router.put('/user/Surveys/:surveyId/questions/:questionId/', function(req, res){
+		// models.answerId.update({
+		// 	answerText: req.body.answerText,
+		// 	answerId: req.body.answerId
+		// }, {
+		// 	where:{
+		// 		answerId: req.body.answerId
+		// 	}
+		// })
+		var answerId = req.params.questionId;
+		var answerText = req.params.answerText;
+		models.sequelize.query('update answerIds set answerId = ?, answerText = ? where answerId = ?', {
+			replacements: [answerId, answerText, answerId]
+		}).spread((results, metadata) => {
+			res.send(metadata);
+		})	
+	})
 
 module.exports = router; 
