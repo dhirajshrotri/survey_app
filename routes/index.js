@@ -389,7 +389,7 @@ const transporter = nodemailer.createTransport({
 				replacements: [req.params.adminId], 
 				type: models.sequelize.QueryTypes.select
 			}).then(surveyResults => {
-				console.log(surveyResults);
+				res.send(surveyResults);
 			})
 		})
 		
